@@ -11,13 +11,11 @@ public class TouchAxisCtrl : MonoBehaviour {
     int m_CapturedTouch = -1;
     Vector2 m_Axis;
     Vector3 m_InitialScale;
-    Camera m_MainCamera;
-    Camera m_JoyCamera;
+    //Camera m_MainCamera;
+    //Camera m_JoyCamera;
 	
     // Use this for initialization
 	void Start () {
-        m_MainCamera = Camera.main;
-        m_JoyCamera = GetComponentInParent<Camera>();
         if (node.parent != transform)
         {
             node.parent = transform;
@@ -27,34 +25,11 @@ public class TouchAxisCtrl : MonoBehaviour {
         Reset();
 	}
 
-    // Keep the Joystick UI camera synced with the main camera.
-	void LateUpdate()
-    {
-        m_JoyCamera.transform.position = m_MainCamera.transform.position;
-    }
-
     void Update () {
         // Get the mouse position - this is for testing. 
-#if UNITY_EDITOR
-        if (m_CapturedTouch < 0)
-        {
-            if ((!spawnOnTouch && Input.GetMouseButtonDown(0) && GetPointDistance(m_JoyCamera.ScreenToWorldPoint(Input.mousePosition)) < GetScaledParimeter(touchArea))
-                || (spawnOnTouch && Input.GetMouseButtonDown(0)))
-            {
-                CaptureTouch(0, m_JoyCamera.ScreenToWorldPoint(Input.mousePosition));
-            }
-        }
-        else if (Input.GetMouseButtonUp(0))
-        {
-            Reset();
-        }
-        else
-        {
-            HandleValidTouch(m_JoyCamera.ScreenToWorldPoint(Input.mousePosition));
-        }
         // If not in the unity editor, get the touch position. Either only care about a touch in the right zone, 
         // or use the spawn option and only care about the first touch.
-#else
+#if (UNITY_IOS || UNITY_ANDROID)
         if (m_CapturedTouch < 0)
         {
             for (int i = 0; i < Input.touchCount; ++i)
@@ -77,6 +52,23 @@ public class TouchAxisCtrl : MonoBehaviour {
             {
                 HandleValidTouch(m_JoyCamera.ScreenToWorldPoint(Input.GetTouch(m_CapturedTouch).position));
             }
+        }
+#else
+        if (m_CapturedTouch < 0)
+        {
+            if ((!spawnOnTouch && Input.GetMouseButtonDown(0) && GetPointDistance(Input.mousePosition) < GetScaledParimeter(touchArea))
+                || (spawnOnTouch && Input.GetMouseButtonDown(0)))
+            {
+                CaptureTouch(0, Input.mousePosition);
+            }
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            Reset();
+        }
+        else
+        {
+            HandleValidTouch(Input.mousePosition);
         }
 #endif 
     }
